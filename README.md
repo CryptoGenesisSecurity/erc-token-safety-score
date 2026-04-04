@@ -31,24 +31,40 @@ interface IERC_TokenSafetyScore {
 }
 ```
 
-## Live Oracle
+## Live Deployments
 
-Deployed and operational on **Optimism mainnet**:
+### Oracles (ERC-7913)
 
-| | |
-|---|---|
-| **Contract** | [`0x3B8A6D696f2104A9aC617bB91e6811f489498047`](https://optimistic.etherscan.io/address/0x3B8A6D696f2104A9aC617bB91e6811f489498047) |
-| **Chain** | Optimism (Chain ID: 10) |
-| **Tokens scored** | 9 major tokens (WETH, OP, USDC, USDT, DAI, VELO, wstETH, rETH, SNX, LINK) |
-| **Gas cost per query** | ~0 (view function) |
+| Chain | Contract | Tokens Scored |
+|-------|----------|---------------|
+| **Base** | [`0x37b9e9B8789181f1AaaD1cD51A5f00A887fa9b8e`](https://basescan.org/address/0x37b9e9B8789181f1AaaD1cD51A5f00A887fa9b8e) | 200+ (auto-growing) |
+| **Optimism** | [`0x3B8A6D696f2104A9aC617bB91e6811f489498047`](https://optimistic.etherscan.io/address/0x3B8A6D696f2104A9aC617bB91e6811f489498047) | 108+ |
 
-## SafeAgent MCP Server
+### SafeRouter (swap with built-in safety)
 
-AI agents can query token safety via the **Model Context Protocol**:
+| Chain | Contract | Fee |
+|-------|----------|-----|
+| **Base** | [`0xb200357a35C7e96A81190C53631BC5Beca84A8FA`](https://basescan.org/address/0xb200357a35C7e96A81190C53631BC5Beca84A8FA) | 0.1% |
+
+SafeRouter wraps Aerodrome. Any swap through it automatically checks token safety. Scam tokens are blocked before the swap executes.
+
+```solidity
+// Instead of swapping directly on Aerodrome:
+SafeRouter(0xb200...).safeSwap(WETH, tokenOut, amount, minOut, false, deadline);
+// → Checks oracle → blocks scams → executes swap → 0.1% fee
+```
+
+### MCP Server (for AI agents)
 
 ```
-MCP SSE: https://cryptogenesis.duckdns.org/mcp/sse
+Streamable HTTP: POST https://cryptogenesis.duckdns.org/mcp
 REST API: https://cryptogenesis.duckdns.org/token/scan?address=0x...&chain=base
+```
+
+### Smithery
+
+```
+npx @smithery/cli install @safeagent/token-safety
 ```
 
 ### Tools
