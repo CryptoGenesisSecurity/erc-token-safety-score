@@ -1,0 +1,14 @@
+{
+  "contract": "0x9B4A30677152dB1B432812f5B7cbA4f201614784",
+  "chain": "optimism",
+  "chainId": 10,
+  "features": [
+    "bonding_curve",
+    "trade_fee_1pct",
+    "auto_graduation",
+    "safe_by_construction"
+  ],
+  "creationFee": "0.0005 ETH",
+  "tradeFee": "1%",
+  "graduationThreshold": "1 ETH"
+}
