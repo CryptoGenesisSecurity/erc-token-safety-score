@@ -73,7 +73,7 @@ npx @smithery/cli install @safeagent/token-safety
 
 | Tool | Description |
 |------|-------------|
-| `check_token_safety` | Full safety analysis — honeypot detection, 17 scam patterns, LP lock check. 6 EVM chains. |
+| `check_token_safety` | Full safety analysis — honeypot detection, 27 scam patterns, LP lock check. 6 EVM chains. |
 | `get_defi_yields` | Top DeFi yields with quality grades (A-F), 17K+ pools across 30+ chains |
 | `get_market_overview` | DeFi market analysis with TVL breakdown and risk alerts |
 
