@@ -1,0 +1,18 @@
+{
+  "name": "safeagent-sdk",
+  "version": "1.0.0",
+  "description": "Token safety checks for AI agents. Honeypot detection, scam patterns, LP lock verification across 6 EVM chains. ERC Token Safety Score standard.",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "keywords": ["token-safety", "honeypot", "scam-detection", "mcp", "ai-agent", "defi", "erc20", "safety-score", "rug-pull", "crypto", "ethereum", "base", "arbitrum", "web3"],
+  "author": "CryptoGen Security <Cryptogen@zohomail.eu>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/CryptoGenesisSecurity/erc-token-safety-score"
+  },
+  "homepage": "https://github.com/CryptoGenesisSecurity/erc-token-safety-score",
+  "bugs": {
+    "url": "https://github.com/CryptoGenesisSecurity/erc-token-safety-score/issues"
+  }
+}
