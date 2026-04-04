@@ -1,0 +1,9 @@
+{
+  "contract": "0x3B8A6D696f2104A9aC617bB91e6811f489498047",
+  "deployer": "0xDa429f2034b62b8722713873dE3C045eec390d8F",
+  "chain": "optimism",
+  "chainId": 10,
+  "tx": "d4ef0a205e3d85626b0f3ddd73c9fabb128bc5c59f8a6e02a8c91bebc49655da",
+  "block": 149859786,
+  "gasUsed": 981489
+}
