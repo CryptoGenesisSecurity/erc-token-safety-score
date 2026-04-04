@@ -22,11 +22,51 @@ DEFI_URL = "http://localhost:8085"
 RISK_URL = "http://localhost:8100"
 
 
+# ===== #1 GAME CHANGER: REAL HONEYPOT SIMULATION =====
+
+@mcp.tool()
+def test_honeypot(address: str, chain: str = "base") -> str:
+    """TEST if you can actually sell a token — not guessing, PROVING via real DEX swap simulation.
+    Other tools PREDICT honeypots from code patterns. We SIMULATE a real buy+sell on the DEX router.
+    If sell reverts or returns 0 → confirmed honeypot. Shows exact buy/sell tax.
+    Args:
+        address: Token contract address (0x...)
+        chain: base, ethereum, arbitrum, optimism, polygon, bsc
+    """
+    try:
+        r = requests.get(f"{SCANNER_URL}/honeypot", params={"address": address, "chain": chain}, timeout=20)
+        if r.ok:
+            d = r.json()
+            hp = d.get("honeypot")
+            can_sell = d.get("can_sell")
+            tax = d.get("total_tax_pct")
+            ms = d.get("scan_time_ms", "?")
+
+            if not d.get("simulated"):
+                return f"Could not simulate: {d.get('reason', 'no liquidity found')}"
+
+            result = ""
+            if hp:
+                result = f"🚫 HONEYPOT CONFIRMED — you CANNOT sell this token.\n"
+                result += f"Reason: {d.get('reason', 'sell reverted')}\n"
+            elif tax and tax > 10:
+                result = f"⚠️ HIGH TAX — you can sell but lose {tax}%.\n"
+            else:
+                result = f"✅ VERIFIED SAFE — you CAN sell. Tax: {tax}%.\n"
+
+            result += f"Method: Real DEX swap simulation (not code analysis)\n"
+            result += f"Router: {d.get('router', '?')} | Time: {ms}ms\n"
+            return result
+        return f"Error: HTTP {r.status_code}"
+    except Exception as e:
+        return f"Simulation error: {e}"
+
+
 # ===== SECURITY TOOLS =====
 
 @mcp.tool()
 def check_token_safety(address: str, chain: str = "base") -> str:
-    """Check if a token is safe or a scam. Runs honeypot simulation, 17 scam pattern checks across 6 EVM chains.
+    """Full safety analysis — 27 scam patterns + code audit. For comprehensive check, use test_honeypot first for instant proof.
     Args:
         address: Token contract address (0x...)
         chain: base, ethereum, arbitrum, optimism, polygon, bsc

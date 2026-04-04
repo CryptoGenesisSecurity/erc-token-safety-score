@@ -2,7 +2,7 @@
 
 > **Free during beta** — no API key, no payment, no limits. Just scan.
 
-**The open standard for token safety scoring on EVM chains.**
+**Real honeypot testing — not guessing, PROVING. The open standard for token safety scoring on EVM chains.**
 
 Any smart contract, wallet, DEX, or AI agent can query whether a token is safe — using a single, standardized interface.
 

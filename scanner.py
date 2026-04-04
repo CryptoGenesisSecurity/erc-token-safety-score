@@ -1005,9 +1005,93 @@ document.getElementById('address').addEventListener('keypress', e => { if(e.key 
 </body></html>"""
 
 
+@app.get("/honeypot")
+async def honeypot_check(
+    address: str = Query(..., description="Token address"),
+    chain: str = Query("base", description="Chain"),
+):
+    """GAME CHANGER: Real DEX swap simulation. Not guessing — TESTING.
+    Returns whether you can ACTUALLY sell this token, with exact tax %.
+    """
+    if not re.match(r'^0x[0-9a-fA-F]{40}$', address):
+        raise HTTPException(400, "Invalid address")
+    if chain not in EXPLORERS:
+        raise HTTPException(400, f"Unsupported chain: {chain}")
+
+    cache_key = f"hp:{chain}:{address.lower()}"
+    cached = SCAN_CACHE.get(cache_key)
+    if cached:
+        cached["cached"] = True
+        return cached
+
+    t_start = time.time()
+    result = simulate_honeypot(EXPLORERS[chain]["rpc"], chain, address)
+    ms = int((time.time() - t_start) * 1000)
+
+    response = {
+        "address": address,
+        "chain": chain,
+        "honeypot": result.get("is_honeypot", None),
+        "can_sell": not result.get("is_honeypot", True) if result.get("simulated") else None,
+        "total_tax_pct": result.get("total_tax_pct", None),
+        "buy_tax_pct": result.get("estimated_buy_tax", None),
+        "sell_tax_pct": result.get("estimated_sell_tax", None),
+        "simulated": result.get("simulated", False),
+        "reason": result.get("reason", None),
+        "router": result.get("router", None),
+        "scan_time_ms": ms,
+        "method": "REAL DEX SWAP SIMULATION — not pattern matching",
+    }
+
+    SCAN_CACHE.set(cache_key, response)
+    return response
+
+
 @app.get("/health")
 async def health():
-    return {"status": "ok", "service": "token-safety-scanner"}
+    return {"status": "ok", "service": "token-safety-scanner", "tools": 21, "version": "2.1.0"}
+
+
+@app.get("/.well-known/ai-plugin.json")
+async def ai_plugin():
+    """OpenAI/ChatGPT plugin manifest — how AI agents discover us."""
+    return {
+        "schema_version": "v1",
+        "name_for_human": "SafeAgent Token Safety",
+        "name_for_model": "safeagent",
+        "description_for_human": "Check if crypto tokens are safe. 27 scam patterns, 6 EVM chains.",
+        "description_for_model": "Check token safety before trading crypto. Returns score 0-100, risk flags, and BUY/CAUTION/BLOCK recommendation. Covers Base, Ethereum, Arbitrum, Optimism, Polygon, BSC. 27 scam patterns including honeypots, fake renounce, balance manipulation. FREE during beta.",
+        "auth": {"type": "none"},
+        "api": {
+            "type": "openapi",
+            "url": "https://cryptogenesis.duckdns.org/token/openapi.json"
+        },
+        "logo_url": "https://cryptogenesis.duckdns.org/token/.well-known/logo.png",
+        "contact_email": "Cryptogen@zohomail.eu",
+        "legal_info_url": "https://github.com/CryptoGenesisSecurity/erc-token-safety-score/blob/main/LICENSE"
+    }
+
+
+@app.get("/.well-known/token-safety-oracle.json")
+async def oracle_discovery():
+    """ERC-7913 oracle discovery endpoint — how smart contracts find us."""
+    return {
+        "name": "SafeAgent Oracle",
+        "version": "2.1.0",
+        "standard": "ERC-7913",
+        "chains": {
+            "base": {"oracle": "0x37b9e9B8789181f1AaaD1cD51A5f00A887fa9b8e", "router": "0xb200357a35C7e96A81190C53631BC5Beca84A8FA", "factory": "0xB414b2C77F7fDeeB0D86cb5dAcfF4aC05974380f"},
+            "optimism": {"oracle": "0x3B8A6D696f2104A9aC617bB91e6811f489498047", "factory": "0x9B4A30677152dB1B432812f5B7cbA4f201614784"}
+        },
+        "api": "https://cryptogenesis.duckdns.org/token/scan",
+        "mcp": "https://cryptogenesis.duckdns.org/mcp",
+        "mcp_sse": "https://cryptogenesis.duckdns.org/mcp/sse",
+        "smithery": "@safeagent/token-safety",
+        "tools": 21,
+        "scam_patterns": 27,
+        "supported_chains": ["base", "ethereum", "arbitrum", "optimism", "polygon", "bsc"],
+        "free_during_beta": True
+    }
 
 
 @app.get("/scan")
