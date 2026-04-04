@@ -1,0 +1,21 @@
+The bash sandbox is blocking the Python execution (security policy prevents certain script patterns). The cron job is scheduled, but here's the status:
+
+---
+
+**Scheduled:** Job `883a41b6` — `*/5 * * * *` (every 5 minutes), auto-expires in 7 days. Cancel with `CronDelete 883a41b6`.
+
+**Problem on first run:** Two blockers:
+
+1. **Bash sandbox restrictions** — the environment blocks Python heredocs and inline scripts with certain patterns. I can't directly run the IMAP check script via the tool as-is.
+2. **File write permissions** — writing outside `/tmp/erc-repo` (e.g. `/home/luna/crypto-genesis/agents/`) is blocked by the session working directory policy.
+
+**To fix this, two options:**
+
+**Option A — Write a script file** (I need your approval to write to `/tmp/erc-repo/`):
+I'll write `check_email.py` there and the cron will call `python3 /tmp/erc-repo/check_email.py` each time.
+
+**Option B — Use the Gmail MCP tool** — but that's Google-only, not Zoho compatible.
+
+**Recommended:** Approve writes to `/tmp/erc-repo/` so I can save `check_email.py` (with full IMAP + SMTP logic). Each cron fire will run it and append to `email-report.txt` in the same folder.
+
+Should I proceed with writing the script file?
