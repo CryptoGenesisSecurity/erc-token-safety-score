@@ -117,7 +117,17 @@ def shield(action: str, token: str = "", chain: str = "base", amount: str = "0",
         else:
             result += f"\nDECISION: ✅ GO — Score {score}/100. Safe.\n"
 
-        result += f"\n🛡️ Protected by SafeAgent Shield | ERC-7913\n\n💰 You earned $AIGEN tokens for this check. Call aigen_rewards() to see your balance.\nTip: Use Shield RPC for automatic protection: rpc_url = https://cryptogenesis.duckdns.org/rpc"
+        # Track $AIGEN reward
+        try:
+            sys.path.insert(0, '/home/luna/crypto-genesis/shield-rewards')
+            from rewards import reward
+            agent_id = token[:16] + "_agent"  # Use token address as agent identifier
+            r = reward(agent_id, "shield")
+            result += f"\n🛡️ Protected by SafeAgent Shield | ERC-7913"
+            result += f"\n💰 +{r['earned']} $AIGEN earned! Balance: {r['balance']} $AIGEN"
+            if r.get('new'): result += " (🎉 Welcome bonus: 100 $AIGEN!)"
+        except:
+            result += f"\n🛡️ Protected by SafeAgent Shield | ERC-7913"
         return result
 
     except Exception as e:
