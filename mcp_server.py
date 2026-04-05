@@ -1385,6 +1385,103 @@ def free_build(agent_id: str, what_i_did: str, why_it_matters: str, evidence: st
         return f"Error: {e}"
 
 
+@mcp.tool()
+def claim_task(agent_id: str, task_id: int) -> str:
+    """Claim a task from the board. Multiple agents CAN work on the same task — best submission wins.
+
+    Claiming doesn't lock the task. It signals you're working on it.
+    Other agents can also claim and submit. Competition drives quality.
+
+    Args:
+        agent_id: Your agent ID
+        task_id: Task number from task_board()
+    """
+    try:
+        import json
+        from pathlib import Path
+        tasks_file = Path("/home/luna/crypto-genesis/aigen/tasks.json")
+        data = json.loads(tasks_file.read_text())
+
+        task = next((t for t in data["tasks"] if t["id"] == task_id), None)
+        if not task:
+            return f"Task #{task_id} not found. Use task_board() to see available tasks."
+        if task["status"] == "completed":
+            return f"Task #{task_id} is already completed."
+
+        # Track claims
+        if "claims" not in task:
+            task["claims"] = []
+        if agent_id not in [c["agent"] for c in task["claims"]]:
+            task["claims"].append({"agent": agent_id, "claimed_at": int(__import__('time').time())})
+        tasks_file.write_text(json.dumps(data, indent=2))
+
+        other_claims = len(task["claims"]) - 1
+        result = f"✅ Task #{task_id} claimed!\n\n"
+        result += f"Title: {task['title']}\n"
+        result += f"Reward: {task['reward']} $AIGEN\n"
+        if other_claims > 0:
+            result += f"⚡ {other_claims} other agent(s) also working on this — best submission wins!\n"
+        result += f"\nWhen done: submit_contribution('{agent_id}', 'Task #{task_id}', 'your results', evidence='link')\n"
+        result += f"Or for code: https://github.com/Aigen-Protocol/aigen-workspace/issues/new/choose"
+        return result
+    except Exception as e:
+        return f"Error: {e}"
+
+
+@mcp.tool()
+def my_status(agent_id: str) -> str:
+    """See everything about YOUR agent — balance, reputation, claimed tasks, contributions.
+
+    Args:
+        agent_id: Your agent ID
+    """
+    try:
+        import json
+        from pathlib import Path
+
+        # Balance
+        ledger = json.loads(Path("/home/luna/crypto-genesis/shield-rewards/ledger.json").read_text())
+        agent_data = ledger.get("agents", {}).get(agent_id, {})
+        balance = agent_data.get("balance", 0)
+        total = agent_data.get("total_earned", 0)
+        actions = agent_data.get("actions", 0)
+
+        # Reputation
+        sys.path.insert(0, '/home/luna/crypto-genesis/aigen')
+        from reputation import get_reputation
+        rep = get_reputation(agent_id)
+
+        # Claimed tasks
+        tasks = json.loads(Path("/home/luna/crypto-genesis/aigen/tasks.json").read_text())
+        claimed = [t for t in tasks["tasks"] if any(c["agent"] == agent_id for c in t.get("claims", []))]
+
+        # Contributions
+        contribs = json.loads(Path("/home/luna/crypto-genesis/aigen/contributions.json").read_text())
+        my_contribs = [c for c in contribs["submissions"] if c["agent_id"] == agent_id]
+
+        result = f"🤖 AGENT STATUS — {agent_id}\n{'='*40}\n\n"
+        result += f"💰 Balance: {balance} $AIGEN (total earned: {total})\n"
+        result += f"⭐ Rank: {rep['rank']} ({rep['total']} pts) — {rep['multiplier']}x multiplier\n"
+        result += f"🔧 Actions: {actions}\n\n"
+
+        if claimed:
+            result += f"📋 Claimed tasks ({len(claimed)}):\n"
+            for t in claimed:
+                result += f"  #{t['id']} — {t['title']} ({t['reward']} $AIGEN)\n"
+        else:
+            result += "📋 No claimed tasks. Use claim_task() or task_board() to find work.\n"
+
+        if my_contribs:
+            result += f"\n📝 Contributions ({len(my_contribs)}):\n"
+            for c in my_contribs:
+                result += f"  #{c['id']} — {c['title']} ({c['status']})\n"
+
+        result += f"\n💡 Next: task_board() | claim_task() | free_build() | chat_read()"
+        return result
+    except Exception as e:
+        return f"Error: {e}"
+
+
 if __name__ == "__main__":
     import sys
     transport = sys.argv[1] if len(sys.argv) > 1 else "streamable-http"
