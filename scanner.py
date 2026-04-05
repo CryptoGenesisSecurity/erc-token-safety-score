@@ -717,12 +717,24 @@ def compute_safety_score(checks: dict) -> dict:
 
     # Known safe system contracts (precompiles, wrapped native tokens)
     KNOWN_SAFE = {
-        "0x4200000000000000000000000000000000000006",  # WETH on Base/Optimism
-        "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",  # WETH on Ethereum
-        "0x82af49447d8a07e3bd95bd0d56f35241523fbab1",  # WETH on Arbitrum
-        "0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270",  # WMATIC on Polygon
-        "0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c",  # WBNB on BSC
+        # Wrapped native tokens
+        "0x4200000000000000000000000000000000000006",  # WETH Base/OP
+        "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",  # WETH Ethereum
+        "0x82af49447d8a07e3bd95bd0d56f35241523fbab1",  # WETH Arbitrum
+        "0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270",  # WMATIC Polygon
+        "0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c",  # WBNB BSC
         "0x4200000000000000000000000000000000000042",  # OP token
+        # Stablecoins
+        "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",  # USDC Base
+        "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",  # USDC Ethereum
+        "0xaf88d065e77c8cc2239327c5edb3a432268e5831",  # USDC Arbitrum
+        "0x0b2c639c533813f4aa9d7837caf62653d097ff85",  # USDC Optimism
+        "0xdac17f958d2ee523a2206206994597c13d831ec7",  # USDT Ethereum
+        "0xfd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb9",  # USDT Arbitrum
+        "0x94b008aa00579c1307b0ef2c499ad98a8ce58e58",  # USDT Optimism
+        "0x6b175474e89094c44da98b954eedeac495271d0f",  # DAI Ethereum
+        "0xda10009cbd5d07dd0cecc66161fc93d7c9000da1",  # DAI Optimism/Arbitrum
+        "0x50c5725949a6f0c72e6c4a641f24049a917db0cb",  # DAI Base
     }
     addr = checks.get("address", "").lower()
     if addr in KNOWN_SAFE:
@@ -1161,6 +1173,18 @@ async def scan_basic(
     token_info_result, contract_data = await asyncio.gather(
         token_info_task, contract_task
     )
+
+    # Quick check: if token_info returns nothing useful AND blockscout has no data → it's a wallet, not a token
+    if (not token_info_result.get("name") or token_info_result["name"] == "Unknown") \
+       and (not token_info_result.get("symbol") or token_info_result["symbol"] == "???") \
+       and not contract_data:
+        scan_time = round(time.time() - t_start, 3)
+        return {
+            "address": address, "chain": chain, "token": {},
+            "safety_score": 0, "verdict": "NOT A TOKEN",
+            "flags": ["This is a wallet address, not a token contract. Use check_wallet_risk for wallet analysis."],
+            "scan_time_ms": int(scan_time * 1000), "timestamp": int(time.time()),
+        }
 
     # Check if this is actually an ERC-20 token
     # Multiple signals: name/symbol decoded, OR blockscout recognizes it as token, OR it has decimals
