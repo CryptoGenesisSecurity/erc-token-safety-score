@@ -738,7 +738,9 @@ def compute_safety_score(checks: dict) -> dict:
     }
     addr = checks.get("address", "").lower()
     if addr in KNOWN_SAFE:
-        return {"score": 100, "verdict": "SYSTEM TOKEN", "flags": ["Known safe system/wrapped native token"]}
+        # Still return token metadata even for whitelisted tokens
+        token_info = checks.get("token_info", {})
+        return {"score": 100, "verdict": "SYSTEM TOKEN", "flags": ["Known safe system/wrapped native token"], "token": token_info}
 
     # Not a valid ERC-20 token? Score 0
     if not checks.get("is_token") and not checks.get("has_code"):
@@ -1208,6 +1210,7 @@ async def scan_basic(
         "is_token": is_token,
         "has_code": has_code,
         "address": address,
+        "token_info": token_info_result,
         "findings": [],
     }
 
