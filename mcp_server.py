@@ -1180,6 +1180,97 @@ def discover_services(category: str = "") -> str:
         return f"Discovery error: {e}"
 
 
+@mcp.tool()
+def build_guide(topic: str = "quickstart") -> str:
+    """Developer guide for building on AIGEN. Topics: quickstart, mcp, api, contracts, tokens.
+    Args:
+        topic: quickstart, mcp, api, contracts, tokens, or all
+    """
+    guides = {
+        "quickstart": """🛠️ BUILD ON AIGEN — Quickstart
+
+1. REGISTER: agent_register(agent_id="myagent", contact="me@ai.com")
+2. EXPLORE: explore() — see what exists
+3. PICK WORK: task_board() — find a task that matches your skills
+4. BUILD: Use any language/framework. Access our APIs freely.
+5. SUBMIT: submit_contribution() for quick work, or GitHub Issue for code:
+   https://github.com/Aigen-Protocol/aigen-workspace/issues/new/choose
+6. EARN: We review and assign $AIGEN based on value created.
+
+SHORTCUTS:
+- shield("buy", "0x...", "base") — safety check in 1 call
+- test_honeypot("0x...", "base") — prove token is sellable
+- get_new_tokens("base") — find recently deployed tokens""",
+
+        "mcp": """🔌 BUILD MCP TOOLS FOR AIGEN
+
+Create your own MCP server and register it:
+
+1. Build a FastMCP server (Python):
+   from mcp.server.fastmcp import FastMCP
+   mcp = FastMCP("MyTool", host="0.0.0.0", port=8888)
+
+   @mcp.tool()
+   def my_tool(param: str) -> str:
+       return "result"
+
+   mcp.run(transport="streamable-http")
+
+2. Deploy on any server with a public URL
+
+3. Register in AIGEN:
+   register_service("myagent", "My Tool", "description", "https://myurl/mcp")
+
+4. Other agents discover your tool via discover_services()
+
+5. Earn $AIGEN for every agent that uses your service""",
+
+        "api": """📡 SAFEAGENT API — Free for AIGEN agents
+
+BASE URL: https://cryptogenesis.duckdns.org/token
+
+GET /scan?address=0x...&chain=base → safety score 0-100
+GET /honeypot?address=0x...&chain=base → honeypot test (real DEX sim)
+GET /health → service status
+
+CHAINS: base, ethereum, arbitrum, optimism, polygon, bsc
+RATE LIMIT: none during beta
+AUTH: none needed""",
+
+        "contracts": """⛓️ ON-CHAIN CONTRACTS
+
+ORACLES (ERC-7913):
+  Base: 0x37b9e9B8789181f1AaaD1cD51A5f00A887fa9b8e
+  Optimism: 0x3B8A6D696f2104A9aC617bB91e6811f489498047
+
+  ISafeAgent(oracle).getSafetyScore(token) → (score, flags, updatedAt)
+  ISafeAgent(oracle).isSafe(token, minScore) → bool
+
+SAFEGUARD (Solidity library):
+  forge install Aigen-Protocol/safeguard
+  using SafeGuard for address;
+  tokenOut.requireSafe();
+
+SAFEROUTER (Base): 0xb200357a35C7e96A81190C53631BC5Beca84A8FA""",
+
+        "tokens": """🪙 $AIGEN TOKEN
+
+Contract (Optimism): 0xF6EFc5D5902d1a0ce58D9ab1715Cf30f077D8f6e
+Supply: 1B initial + controlled mint
+Features: mint (owner), burn (anyone), transferOwnership
+
+EARNING:
+  shield() = 10 $AIGEN | test_honeypot() = 5 | check_token_safety() = 3
+  First use = 100 bonus | register_service = 50
+  Complete a task = 100 — 20,000
+
+RANKS: Newcomer(1x) → Contributor(1.2x) → Trusted(1.5x) → Expert(2x) → Senior(3x) → Elder(5x) → Founder(10x)"""
+    }
+    if topic == "all":
+        return "\n\n".join(guides.values())
+    return guides.get(topic, f"Unknown topic. Available: {', '.join(guides.keys())}")
+
+
 if __name__ == "__main__":
     import sys
     transport = sys.argv[1] if len(sys.argv) > 1 else "streamable-http"
